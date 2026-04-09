@@ -234,15 +234,11 @@ function addToCart(carts, product, quantity) {
     (item) => item.product.id === product.id,
   );
 
-  // 取 id 屬性流水號
-  const currentCartId = copiedCart[copiedCart.length - 1].id;
-  const splitIdNumber = Number(currentCartId.slice(currentCartId.length - 1));
-
   if (hasLiveInCart && cartIndex !== -1) {
     copiedCart[cartIndex].quantity++;
   } else {
     copiedCart.push({
-      id: `cart-${splitIdNumber + 1}`,
+      id: Date.now(),
       product,
       quantity,
     });
@@ -341,7 +337,7 @@ function generateOrderReport(orders) {
   const paidOrders = filterOrdersByStatus(orders, true);
   const unpaidOrders = filterOrdersByStatus(orders, false);
   const totalRevenue = calculateTotalRevenue(orders);
-  const averageOrderValue = orderTotal / totalOrders;
+  const averageOrderValue = Math.round(orderTotal / totalOrders);
 
   return {
     totalOrders,
@@ -362,13 +358,17 @@ function generateOrderReport(orders) {
  * }
  */
 function groupOrdersByPayment(orders) {
-  const paymentRule = {
-    ATM: [],
-    "Credit Card": [],
-  };
+  const paymentRule = {};
+
+  // 初始化付款方式
+  const paymentType = orders.map((item) => item.user.payment);
+  [...new Set(paymentType)].forEach((item) => {
+    paymentRule[item] = [];
+  });
+
   orders.forEach((item) => {
-    const payType = item.user.payment;
-    paymentRule[payType].push(item);
+    const type = item.user.payment;
+    paymentRule[type].push(item);
   });
 
   return paymentRule;
